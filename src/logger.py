@@ -2,7 +2,8 @@ import logging
 import sys
 import colorlog
 
-def app_logger():
+
+def _init_logger():
     logger = logging.getLogger('bot')
     logger.setLevel(logging.DEBUG)
 
@@ -19,7 +20,7 @@ def app_logger():
                 'INFO': 'green',
                 'WARNING': 'yellow',
                 'ERROR': 'red',
-                'CRITICAL': 'red,bg_white',
+                'CRITICAL': 'black,bg_red',
             },
             secondary_log_colors={},
             style='%'
@@ -29,3 +30,6 @@ def app_logger():
         logger.addHandler(handler)
 
     return logger
+
+
+app_logger = _init_logger()

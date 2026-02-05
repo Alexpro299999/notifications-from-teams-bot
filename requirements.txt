@@ -1,4 +1,5 @@
 winsdk
 colorlog
 aiohttp
+httpx
 python-dotenv

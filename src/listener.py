@@ -1,33 +1,16 @@
-import sys
-from winrt.windows.ui.notifications import NotificationKinds
-from winrt.windows.ui.notifications.management import UserNotificationListener, UserNotificationListenerAccessStatus
+from winsdk.windows.ui.notifications.management import UserNotificationListener, UserNotificationListenerAccessStatus
+from winsdk.windows.ui.notifications import NotificationKinds
 from src.logger import app_logger
+from src.config import CHROME_KEYWORDS
 
 
 class WindowsNotificationListener:
-    def __init__(self, target_app_name: str):
-        self.target_app = target_app_name
-        self.listener = self._get_listener_instance()
+    def __init__(self, target_apps: list[str]):
+        self.target_apps = target_apps
+        self.listener = UserNotificationListener.current
         self.processed_ids = set()
 
-    def _get_listener_instance(self):
-        try:
-            if hasattr(UserNotificationListener, 'current'):
-                return UserNotificationListener.current
-            elif hasattr(UserNotificationListener, 'get_current'):
-                return UserNotificationListener.get_current()
-            else:
-                # Если ничего не нашли, выводим отладку
-                app_logger.critical(f"Available attributes: {dir(UserNotificationListener)}")
-                raise AttributeError("Cannot find 'current' or 'get_current' in UserNotificationListener")
-        except Exception as e:
-            app_logger.critical(f"Failed to initialize listener: {e}")
-            raise e
-
     async def request_access(self) -> bool:
-        if not self.listener:
-            return False
-
         try:
             status = await self.listener.request_access_async()
             if status == UserNotificationListenerAccessStatus.ALLOWED:
@@ -36,17 +19,13 @@ class WindowsNotificationListener:
             app_logger.critical("access to windows notifications denied")
             return False
         except Exception as e:
-            app_logger.error(f"Error requesting access: {e}")
+            app_logger.error(f"error requesting access: {e}")
             return False
 
     async def get_new_notifications(self) -> list[str]:
-        if not self.listener:
-            return []
-
         messages = []
         try:
             notifications = await self.listener.get_notifications_async(NotificationKinds.TOAST)
-
             current_ids = {n.id for n in notifications}
             self.processed_ids = {pid for pid in self.processed_ids if pid in current_ids}
 
@@ -54,24 +33,34 @@ class WindowsNotificationListener:
                 if n.id in self.processed_ids:
                     continue
 
-                if not n.app_info or not n.app_info.display_info:
+                app_name = n.app_info.display_info.display_name
+                is_target = False
+                for t in self.target_apps:
+                    if t.lower() in app_name.lower():
+                        is_target = True
+                        break
+
+                if not is_target:
                     continue
 
-                app_name = n.app_info.display_info.display_name
+                try:
+                    binding = n.notification.visual.get_binding("ToastGeneric")
+                    if binding:
+                        elements = binding.get_text_elements()
+                        texts = [e.text for e in elements]
+                        full_text = " | ".join(texts)
 
-                if self.target_app.lower() in app_name.lower():
-                    try:
-                        bindings = n.notification.visual.bindings
-                        if bindings and bindings.size > 0:
-                            texts = [t.text for t in bindings.get_at(0).get_text_elements()]
-                            full_text = " | ".join(texts)
+                        if "chrome" in app_name.lower():
+                            if not any(k.lower() in full_text.lower() for k in CHROME_KEYWORDS):
+                                self.processed_ids.add(n.id)
+                                continue
 
-                            app_logger.info(f"captured notification from {app_name}: {full_text}")
-                            messages.append(full_text)
-                    except Exception as e:
-                        app_logger.warning(f"failed to parse text elements: {e}")
+                        app_logger.info(f"captured: [{app_name}] {full_text}")
+                        messages.append(full_text)
+                except Exception as e:
+                    app_logger.warning(f"parse error: {e}")
 
-                    self.processed_ids.add(n.id)
+                self.processed_ids.add(n.id)
 
         except Exception as e:
             app_logger.error(f"error reading notifications: {e}")

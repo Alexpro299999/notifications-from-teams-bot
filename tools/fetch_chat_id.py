@@ -3,10 +3,9 @@ import os
 import asyncio
 import httpx
 from dotenv import load_dotenv
+from src.logger import app_logger
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.logger import app_logger
 
 load_dotenv()
 
@@ -14,7 +13,7 @@ load_dotenv()
 async def get_chat_id():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        app_logger.critical("token not found in env file")
+        app_logger.critical("telegram_bot_token not found in env file")
         return
 
     url = f"https://api.telegram.org/bot{token}/getUpdates"
