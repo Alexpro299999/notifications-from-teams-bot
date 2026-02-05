@@ -10,37 +10,38 @@ Markdown
 
 ## Установка
 
-1. Склонируй репозиторий:
-   ```bash
-   git clone [https://github.com/your_user/notifications-from-teams-bot.git](https://github.com/your_user/notifications-from-teams-bot.git)
+Склонируй репозиторий:
+```bash
+   git clone https://github.com/Alexpro299999/notifications-from-teams-bot
    cd notifications-from-teams-bot
+  ```
 Создай и активируй виртуальное окружение:
 
 ```Bash
-python -m venv venv
-source venv/Scripts/activate 
+  python -m venv venv
+  source venv/Scripts/activate 
 ```
 
 Установи зависимости:
 
 ```Bash
-pip install -r requirements.txt
+  pip install -r requirements.txt
 ```
 
 Конфигурация
 Создай файл .env в корне проекта и заполни его данными:
 
 ```Code snippet
-TELEGRAM_BOT_TOKEN=ТВОЙ_ТОКЕН
-TELEGRAM_CHAT_ID=YOUR_CHAT_ID
+   TELEGRAM_BOT_TOKEN=ТВОЙ_ТОКЕН
+   TELEGRAM_CHAT_ID=YOUR_CHAT_ID
 ```
 **Напиши своему боту чет и триггерни fetch_chat_id.py**
 
 Запуск
 ```Bash
-python main.py
+  python main.py
 ```
-Как это работает
+### Как это работает
 При старте бот запрашивает доступ к уведомлениям Windows.
 
 Кэширует текущие (старые) уведомления, чтобы не спамить при перезапуске.
