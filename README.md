@@ -50,22 +50,29 @@ Markdown
 ```Bash
   python main.py
 ```
-### Тестирование через Chrome
+### Тестирование ()
 Чтобы проверить работу бота без реального звонка в Teams, можно сгенерировать фейковое уведомление через браузер:
 
-Открой сайт bennish.net/web-notifications.html.
-
-Нажми кнопку **Authorize**, чтобы разрешить уведомления.
-
-Открой консоль разработчика (нажми F12 и перейди во вкладку Console).
-
-Вставь следующий код и нажми Enter:
+Для проверки работы фильтров (Edge/Chrome) открой консоль разработчика (F12) на сайте bennish.net/web-notifications.html.
+Сначала нажми Authorize, затем используй команды ниже.
+#### Google Chrome
+Бот проверяет нижнюю часть уведомления (source/footer) или заголовок.
+```JavaScript
+new Notification("Microsoft Teams", { 
+    body: "Проверка уведомления для Chrome",
+    requireInteraction: true
+});
+```
+#### Microsoft Edge
+Бот проверяет верхнюю часть уведомления (header/source). В Edge источник часто указывается в заголовке.
 
 ```JavaScript
-new Notification("Microsoft Teams", { body: "Тестовое уведомление для проверки бота" });
+new Notification("teams.microsoft.com", { 
+    body: "Проверка уведомления для Edge",
+    requireInteraction: true 
+});
 ```
-Бот перехватит это уведомление, так как заголовок совпадает с фильтром (Microsoft Teams), и перешлет его в Telegram.
-
+Примечание: Бот настроен на поиск ключевых слов "Microsoft Teams" или "teams.microsoft.com". Уведомления с других сайтов без этих слов будут игнорироваться.
 ### Как это работает
 При старте бот запрашивает доступ к уведомлениям Windows.
 

@@ -1,7 +1,28 @@
 from winsdk.windows.ui.notifications.management import UserNotificationListener, UserNotificationListenerAccessStatus
 from winsdk.windows.ui.notifications import NotificationKinds
 from src.logger import app_logger
-from src.config import CHROME_KEYWORDS
+from src.config import TEAMS_KEYWORDS
+
+
+def _is_valid_source(app_name: str, texts: list[str]) -> bool:
+    if not texts:
+        return False
+
+    app_name_lower = app_name.lower()
+
+    if "edge" in app_name_lower:
+        header_source = texts[0]
+        if any(k.lower() in header_source.lower() for k in TEAMS_KEYWORDS):
+            return True
+        return False
+
+    if "chrome" in app_name_lower:
+        footer_source = texts[-1]
+        if any(k.lower() in footer_source.lower() for k in TEAMS_KEYWORDS):
+            return True
+        return False
+
+    return False
 
 
 class WindowsNotificationListener:
@@ -34,6 +55,7 @@ class WindowsNotificationListener:
                     continue
 
                 app_name = n.app_info.display_info.display_name
+
                 is_target = False
                 for t in self.target_apps:
                     if t.lower() in app_name.lower():
@@ -48,15 +70,14 @@ class WindowsNotificationListener:
                     if binding:
                         elements = binding.get_text_elements()
                         texts = [e.text for e in elements]
+
+                        if not _is_valid_source(app_name, texts):
+                            self.processed_ids.add(n.id)
+                            continue
+
                         full_text = " | ".join(texts)
-
-                        if "chrome" in app_name.lower():
-                            if not any(k.lower() in full_text.lower() for k in CHROME_KEYWORDS):
-                                self.processed_ids.add(n.id)
-                                continue
-
                         app_logger.info(f"captured: [{app_name}] {full_text}")
-                        messages.append(full_text)
+                        messages.append(f"{app_name}: {full_text}")
                 except Exception as e:
                     app_logger.warning(f"parse error: {e}")
 
