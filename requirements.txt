@@ -1,0 +1,4 @@
+winsdk
+colorlog
+aiohttp
+python-dotenv
