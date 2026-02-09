@@ -1,43 +1,56 @@
 import asyncio
-import platform
-from src.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TARGET_APPS
-from src.listener import WindowsNotificationListener
-from src.notifier import TelegramNotifier
-from src.logger import app_logger
+import sys
+from aiogram import Bot
+from aiogram.enums import ParseMode
+from loguru import logger
+from src.config import settings
+from src.monitor import NotificationMonitor
+
+logger.remove()
+logger.add(sys.stderr, format="<green>{time:HH:mm:ss}</green> | <level>{message}</level>")
+
+
+async def sender_loop(bot: Bot, monitor: NotificationMonitor):
+    while True:
+        await asyncio.sleep(settings.notification_delay)
+        messages = await monitor.consume_buffer()
+
+        if not messages:
+            continue
+
+        text = "\n\n".join(messages)
+        final_msg = f"🔔 <b>Teams Notification</b>\n\n{text}"
+
+        for user_id in settings.telegram_user_ids:
+            try:
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=final_msg,
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Failed to send to {user_id}: {e}")
 
 
 async def main():
-    if platform.system() != "Windows":
-        app_logger.critical("application requires windows os")
+    monitor = NotificationMonitor()
+    if not await monitor.request_access():
+        logger.error("Access denied")
         return
 
-    listener = WindowsNotificationListener(TARGET_APPS)
-    if not await listener.request_access():
-        return
-
-    notifier = TelegramNotifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
-
-    app_logger.info("bot started. listening for notifications...")
-
-    await listener.get_new_notifications()
-    app_logger.info("history skipped")
+    bot = Bot(token=settings.telegram_bot_token.get_secret_value())
 
     try:
-        while True:
-            messages = await listener.get_new_notifications()
-            for msg in messages:
-                await notifier.send_notification(msg)
-            await asyncio.sleep(2)
-    except Exception as e:
-        app_logger.critical(f"bot crashed: {e}")
-        await notifier.send_notification(f"critical error: bot crashed. reason: {e}")
-        raise e
+        await asyncio.gather(
+            monitor.start_polling(),
+            sender_loop(bot, monitor)
+        )
     finally:
-        await notifier.close()
+        await bot.session.close()
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        app_logger.info("application stopped by user")
+        pass

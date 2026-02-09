@@ -1,25 +1,19 @@
-import os
-import sys
-from dotenv import load_dotenv
-from src.logger import app_logger
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
-load_dotenv()
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
-TARGET_APPS = [
-    "Google Chrome",
-    "Microsoft Edge"
-]
+    telegram_bot_token: SecretStr
+    telegram_user_ids: list[int]
+    notification_delay: int = 60
+    target_apps: list[str] = ["Google Chrome", "Microsoft Edge"]
+    keywords: list[str] = ["Teams"]
 
-TEAMS_KEYWORDS = [
-    "teams.cloud.microsoft",
-    "teams.microsoft.com",
-    "Microsoft Teams",
-    "Teams"
-]
 
-if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-    app_logger.critical("telegram_bot_token or telegram_chat_id not found in .env file")
-    sys.exit(1)
+settings = Settings()

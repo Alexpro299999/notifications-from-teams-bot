@@ -1,5 +1,6 @@
+aiogram>=3.0.0
+pydantic-settings>=2.0.0
 winsdk
-colorlog
-aiohttp
-httpx
+loguru
 python-dotenv
+pydantic
