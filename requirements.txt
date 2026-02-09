@@ -1,6 +1,0 @@
-aiogram>=3.0.0
-pydantic-settings>=2.0.0
-winsdk
-loguru
-python-dotenv
-pydantic
