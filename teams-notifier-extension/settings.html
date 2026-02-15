@@ -12,6 +12,8 @@
             --primary: #4a9eff;
             --primary-hover: #3b82f6;
             --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
             --border: #333333;
             --input-bg: #2d2d2d;
             color-scheme: dark;
@@ -27,24 +29,17 @@
             overflow-x: hidden;
         }
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
         }
         h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text-main); }
 
+        .nav-buttons { display: flex; gap: 8px; }
         .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: color 0.2s, background 0.2s;
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            padding: 6px; border-radius: 6px; transition: all 0.2s;
         }
         .icon-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
-        .icon-btn svg { width: 20px; height: 20px; }
+        .icon-btn svg { width: 20px; height: 20px; display: block; }
 
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -59,20 +54,14 @@
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-icon { position: absolute; left: 12px; color: var(--text-muted); width: 16px; height: 16px; pointer-events: none; }
 
-        input[type="text"], input[type="password"], input[type="number"], input[type="time"] {
+        input {
             width: 100%; padding: 12px 12px 12px 38px;
             background-color: var(--input-bg); border: 1px solid var(--border);
             border-radius: 8px; color: var(--text-main); font-size: 13px;
-            transition: all 0.2s; box-sizing: border-box;
-            color-scheme: dark;
+            transition: all 0.2s; box-sizing: border-box; color-scheme: dark;
         }
         input:focus { outline: none; border-color: var(--primary); background-color: #333; }
-
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-            opacity: 0.6;
-        }
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.6; }
         input[type="time"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 24px; }
@@ -82,9 +71,30 @@
         #test { background-color: transparent; border: 1px solid var(--border); color: var(--text-muted); }
         #test:hover { border-color: var(--text-muted); color: var(--text-main); background: rgba(255,255,255,0.05); }
 
-        .view-container { transition: transform 0.3s ease, opacity 0.3s ease; }
-        .hidden { display: none; }
+        .logs-container { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .log-item {
+            background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .log-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+        .log-status { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .log-time { font-size: 10px; color: var(--text-muted); }
+        .log-details { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+        .type-success .status-dot { background-color: var(--success); }
+        .type-success .log-status { color: var(--success); }
+        .type-error .status-dot { background-color: var(--error); }
+        .type-error .log-status { color: var(--error); }
+        .type-warning .status-dot { background-color: var(--warning); }
+        .type-warning .log-status { color: var(--warning); }
+        .type-info .status-dot { background-color: var(--primary); }
+        .type-info .log-status { color: var(--primary); }
+
+        .empty-logs { text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px; }
+
+        .view-container { transition: opacity 0.2s ease; }
+        .hidden { display: none; }
         .row { display: flex; gap: 10px; margin-top: 10px; }
         .col { flex: 1; }
         .mini-label { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
@@ -101,9 +111,14 @@
                 </label>
                 <span id="statusLabel" style="font-size:12px; font-weight:700; color:var(--text-muted);">OFF</span>
             </div>
-            <button id="toSettings" class="icon-btn">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </button>
+            <div class="nav-buttons">
+                <button id="toLogs" class="icon-btn" title="Logs">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </button>
+                <button id="toSettings" class="icon-btn" title="Settings">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
         </div>
 
         <div class="group">
@@ -130,10 +145,10 @@
 
     <div id="settingsView" class="view-container hidden">
         <div class="header">
-            <button id="toMain" class="icon-btn">
+            <button class="icon-btn toMain">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             </button>
-            <h2>Advanced Settings</h2>
+            <h2>Advanced</h2>
             <div style="width: 28px;"></div>
         </div>
 
@@ -164,6 +179,14 @@
         </div>
 
         <div class="group">
+            <label>Urgent Keywords (Override Quiet Hours)</label>
+            <div class="input-wrapper">
+                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <input type="text" id="urgentWords" placeholder="Urgent, ASAP, Error...">
+            </div>
+        </div>
+
+        <div class="group">
             <label>
                 Privacy Mode
                 <div class="switch">
@@ -172,7 +195,7 @@
                 </div>
             </label>
             <p style="font-size: 11px; color: var(--text-muted); margin: 4px 0 0 0; line-height: 1.4;">
-                Hide message content and sender in Telegram notifications.
+                Hide content in notifications.
             </p>
         </div>
 
@@ -183,6 +206,19 @@
                 <input type="number" id="delay" value="2">
             </div>
         </div>
+    </div>
+
+    <div id="logsView" class="view-container hidden">
+        <div class="header">
+            <button class="icon-btn toMain">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <h2>History</h2>
+            <button id="clearLogs" class="icon-btn" title="Clear">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+        </div>
+        <div id="logsList" class="logs-container"></div>
     </div>
 
     <script src="settings.js"></script>
