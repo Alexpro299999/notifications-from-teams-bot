@@ -27,14 +27,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function handleCreate(data) {
     const store = await chrome.storage.local.get([
-        "token", "chatIds", "delay", "enabled",
+        "token", "chats", "chatIds", "delay", "enabled",
         "quietHoursEnabled", "quietStart", "quietEnd",
         "privacyMode", "urgentWords"
     ]);
 
     if (store.enabled === false) return;
 
-    if (!store.token || !store.chatIds) {
+    const hasChats = (store.chats && store.chats.length > 0) || (store.chatIds && store.chatIds.length > 0);
+    if (!store.token || !hasChats) {
         addLog("Error", "Missing configuration", "error");
         return;
     }

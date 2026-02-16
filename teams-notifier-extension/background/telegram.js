@@ -1,7 +1,19 @@
 import { addLog } from './utils.js';
 
 export async function sendToTelegram(store, data) {
-    const ids = store.chatIds.split(",").map(id => id.trim()).filter(id => id);
+    let ids = [];
+
+    if (store.chats && Array.isArray(store.chats)) {
+        ids = store.chats.map(c => c.id);
+    } else if (store.chatIds) {
+        ids = store.chatIds.split(",").map(id => id.trim()).filter(id => id);
+    }
+
+    if (ids.length === 0) {
+        addLog("Error", "No recipients configured", "error");
+        return false;
+    }
+
     const cleanTitle = data.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const cleanBody = data.body.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const message = `🔔 <b>Teams (${data.domain})</b>\n\n<b>${cleanTitle}</b>\n${cleanBody}`;
@@ -21,7 +33,7 @@ export async function sendToTelegram(store, data) {
                     disable_web_page_preview: true
                 })
             });
-            if (!response.ok) throw new Error(response.statusText);
+            if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
         } catch (e) {
             allSuccess = false;
             addLog("Failed", `Error sending to ${chatId}: ${e.message}`, "error");
@@ -36,8 +48,8 @@ export async function sendToTelegram(store, data) {
 }
 
 export async function sendTestMessage() {
-    const store = await chrome.storage.local.get(["token", "chatIds"]);
-    if (!store.token || !store.chatIds) return false;
+    const store = await chrome.storage.local.get(["token", "chats", "chatIds"]);
+    if (!store.token || (!store.chats && !store.chatIds)) return false;
 
     const data = {
         domain: "Test System",
